@@ -142,15 +142,29 @@ REPORT_TEMPLATE = """
             <span class="badge badge-{{ stock.action|lower|replace(' ', '-') }}">{{ stock.action }}</span>
         </div>
         <div class="stock-info">
-            <span class="stock-symbol">{{ stock.symbol }}</span>
+            <a href="https://www.tradingview.com/symbols/{{ stock.symbol|replace('-', '.') }}/" style="text-decoration:none;">
+                <span class="stock-symbol">{{ stock.symbol }}</span>
+            </a>
             <span class="stock-name">{{ stock.name }}</span>
             <div class="action-detail">{{ stock.action_detail }}</div>
+            <div style="margin-top: 4px;">
+                {% for signal in stock.signals[:3] %}
+                <span class="signal-tag">{{ signal }}</span>
+                {% endfor %}
+            </div>
+            <div style="margin-top: 6px; font-size: 11px;">
+                <a href="https://www.tradingview.com/symbols/{{ stock.symbol|replace('-', '.') }}/" style="color: #60a5fa; text-decoration: none; margin-right: 12px;">Chart</a>
+                <a href="https://finance.yahoo.com/quote/{{ stock.symbol }}/" style="color: #60a5fa; text-decoration: none; margin-right: 12px;">Fundamentals</a>
+                <a href="https://www.google.com/finance/quote/{{ stock.symbol }}:NASDAQ" style="color: #60a5fa; text-decoration: none; margin-right: 12px;">News</a>
+                <a href="https://finviz.com/quote.ashx?t={{ stock.symbol }}" style="color: #60a5fa; text-decoration: none;">Analysis</a>
+            </div>
         </div>
         <div class="stock-price">
             <div>${{ stock.price }}</div>
             <div class="{{ 'positive' if stock.change_pct >= 0 else 'negative' }}" style="font-size:12px;">
                 {{ "+" if stock.change_pct >= 0 }}{{ stock.change_pct }}%
             </div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Score: {{ stock.total_score }}</div>
         </div>
     </div>
     {% endfor %}
@@ -164,12 +178,19 @@ REPORT_TEMPLATE = """
     {% for stock in opportunities %}
     <div class="stock-row">
         <div class="stock-info">
-            <span class="stock-symbol">{{ stock.symbol }}</span>
+            <a href="https://www.tradingview.com/symbols/{{ stock.symbol|replace('-', '.') }}/" style="text-decoration:none;">
+                <span class="stock-symbol">{{ stock.symbol }}</span>
+            </a>
             <span class="stock-name">{{ stock.name }}</span>
             <div class="stock-signals">
                 {% for signal in stock.signals[:3] %}
                 <span class="signal-tag">{{ signal }}</span>
                 {% endfor %}
+            </div>
+            <div style="margin-top: 6px; font-size: 11px;">
+                <a href="https://www.tradingview.com/symbols/{{ stock.symbol|replace('-', '.') }}/" style="color: #60a5fa; text-decoration: none; margin-right: 12px;">Chart</a>
+                <a href="https://finance.yahoo.com/quote/{{ stock.symbol }}/" style="color: #60a5fa; text-decoration: none; margin-right: 12px;">Fundamentals</a>
+                <a href="https://finviz.com/quote.ashx?t={{ stock.symbol }}" style="color: #60a5fa; text-decoration: none;">Analysis</a>
             </div>
         </div>
         <div style="text-align: right;">
@@ -180,6 +201,7 @@ REPORT_TEMPLATE = """
                     ({{ "+" if stock.change_pct >= 0 }}{{ stock.change_pct }}%)
                 </span>
             </div>
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Score: {{ stock.total_score }}</div>
         </div>
     </div>
     {% endfor %}
