@@ -16,6 +16,7 @@ from data_sources.news_sentiment import (
     get_reddit_sentiment,
 )
 from data_sources.motley_fool import MotleyFoolScraper
+from data_sources.portfolio_loader import load_portfolio
 from analysis.technical import score_stock, classify_signal
 from analysis.fundamental import score_fundamentals
 from analysis.ai_synthesis import generate_ai_summary
@@ -44,11 +45,29 @@ def run_research():
     print("  Fetching sector performance...")
     sectors = get_sector_performance(config.SECTORS_ETFS)
 
-    # 3. Stock data for watchlist
-    print("  Fetching watchlist stock data...")
-    stock_data = get_stock_data(config.WATCHLIST)
+    # 3. Load portfolio + Motley Fool recommendations
+    print("  Loading portfolio...")
+    my_portfolio = load_portfolio()
+    print(f"    Found {len(my_portfolio)} holdings in portfolio")
 
-    # 4. Score and rank stocks
+    print("  Fetching Motley Fool insights...")
+    fool_picks = []
+    fool_articles = []
+    if config.FOOL_EMAIL and config.FOOL_PASSWORD:
+        fool = MotleyFoolScraper(config.FOOL_EMAIL, config.FOOL_PASSWORD)
+        fool_picks = fool.get_stock_advisor_picks()
+        fool_picks += fool.get_rule_breakers_picks()
+        fool_articles = fool.get_free_articles()
+
+    # 4. Build combined watchlist (portfolio + default watchlist)
+    portfolio_symbols = [h["symbol"] for h in my_portfolio if h.get("symbol")]
+    all_symbols = list(set(config.WATCHLIST + portfolio_symbols))
+
+    # 5. Stock data
+    print("  Fetching stock data...")
+    stock_data = get_stock_data(all_symbols)
+
+    # 6. Score and rank all stocks
     print("  Running analysis...")
     scored_stocks = []
     for symbol, data in stock_data.items():
@@ -70,41 +89,67 @@ def run_research():
         })
 
     scored_stocks.sort(key=lambda x: x["total_score"], reverse=True)
-    top_picks = scored_stocks[:10]
 
-    # 5. News and sentiment
+    # 7. Separate portfolio stocks from opportunities
+    portfolio_scored = [s for s in scored_stocks if s["symbol"] in portfolio_symbols]
+    portfolio_scored.sort(key=lambda x: x["total_score"], reverse=True)
+
+    # Top opportunities NOT in portfolio
+    opportunities = [s for s in scored_stocks if s["symbol"] not in portfolio_symbols][:8]
+
+    # Portfolio action items
+    portfolio_actions = []
+    for stock in portfolio_scored:
+        if stock["total_score"] >= 30:
+            action = "ADD MORE"
+            action_detail = "Strong signals — consider increasing position"
+        elif stock["total_score"] >= 10:
+            action = "HOLD"
+            action_detail = "Positive outlook — maintain current position"
+        elif stock["total_score"] >= -10:
+            action = "WATCH"
+            action_detail = "Neutral signals — monitor closely"
+        elif stock["total_score"] >= -30:
+            action = "TRIM"
+            action_detail = "Weakening signals — consider reducing"
+        else:
+            action = "EXIT"
+            action_detail = "Negative signals — consider selling"
+
+        portfolio_actions.append({
+            **stock,
+            "action": action,
+            "action_detail": action_detail,
+        })
+
+    # 8. News and sentiment
     print("  Fetching news and sentiment...")
     news = get_market_news()
     fear_greed = get_fear_greed_index()
     reddit_trending = get_reddit_sentiment()
 
-    # 6. Motley Fool
-    print("  Fetching Motley Fool insights...")
-    fool_picks = []
-    if config.FOOL_EMAIL and config.FOOL_PASSWORD:
-        fool = MotleyFoolScraper(config.FOOL_EMAIL, config.FOOL_PASSWORD)
-        fool_picks = fool.get_stock_advisor_picks()
-        fool_picks += fool.get_free_articles()
-
-    # 7. AI synthesis
+    # 9. AI synthesis
     print("  Generating AI market narrative...")
     report_data = {
         "indices": indices,
         "sectors": sectors,
-        "top_picks": top_picks,
+        "portfolio_actions": portfolio_actions,
+        "opportunities": opportunities,
+        "top_picks": scored_stocks[:10],
         "fear_greed": fear_greed,
         "news": news,
         "reddit_trending": reddit_trending,
         "fool_picks": fool_picks,
+        "fool_articles": fool_articles,
     }
     ai_summary = generate_ai_summary(report_data)
     report_data["ai_summary"] = ai_summary
 
-    # 8. Generate report
+    # 10. Generate report
     print("  Generating report...")
     html_report = generate_report(report_data)
 
-    # 9. Send or save report
+    # 11. Send or save report
     print("  Sending report...")
     send_report(html_report)
 

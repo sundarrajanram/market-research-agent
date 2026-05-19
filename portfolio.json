@@ -1,0 +1,11 @@
+{
+    "name": "My Robinhood Portfolio",
+    "last_updated": "2026-05-19",
+    "holdings": [
+        {"symbol": "AAPL", "shares": 10, "avg_cost": 0},
+        {"symbol": "MSFT", "shares": 5, "avg_cost": 0},
+        {"symbol": "NVDA", "shares": 8, "avg_cost": 0},
+        {"symbol": "GOOGL", "shares": 6, "avg_cost": 0},
+        {"symbol": "AMZN", "shares": 4, "avg_cost": 0}
+    ]
+}

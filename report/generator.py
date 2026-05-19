@@ -1,4 +1,4 @@
-"""Generate the daily investment report."""
+"""Generate the daily investment report — professional dark theme."""
 from datetime import datetime
 from jinja2 import Template
 
@@ -6,189 +6,224 @@ REPORT_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
-    .header { background: linear-gradient(135deg, #1a237e, #0d47a1); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-    .header h1 { margin: 0; font-size: 24px; }
-    .header p { margin: 5px 0 0; opacity: 0.8; }
-    .section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .section h2 { color: #1a237e; margin-top: 0; border-bottom: 2px solid #e3f2fd; padding-bottom: 10px; }
-    .stock-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-    .stock-name { font-weight: 600; }
-    .positive { color: #2e7d32; }
-    .negative { color: #c62828; }
-    .signal-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-    .strong-buy { background: #e8f5e9; color: #1b5e20; }
-    .buy { background: #f1f8e9; color: #33691e; }
-    .hold { background: #fff8e1; color: #f57f17; }
-    .sell { background: #fbe9e7; color: #bf360c; }
-    .strong-sell { background: #ffebee; color: #b71c1c; }
-    .indicator { display: inline-block; margin: 3px 5px 3px 0; padding: 2px 8px; background: #e3f2fd; border-radius: 4px; font-size: 11px; }
-    .news-item { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
-    .news-source { font-size: 11px; color: #666; }
-    .fear-greed { text-align: center; font-size: 48px; font-weight: bold; }
-    .disclaimer { font-size: 11px; color: #999; text-align: center; margin-top: 20px; }
-    table { width: 100%; border-collapse: collapse; }
-    td, th { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
-    th { font-weight: 600; color: #666; font-size: 12px; text-transform: uppercase; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif; background: #0a0e17; color: #e2e8f0; padding: 20px; line-height: 1.5; }
+    .container { max-width: 720px; margin: 0 auto; }
+
+    .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 1px solid #1e40af; border-radius: 12px; padding: 28px; margin-bottom: 16px; position: relative; overflow: hidden; }
+    .header::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4); }
+    .header h1 { font-size: 22px; font-weight: 700; color: #f8fafc; letter-spacing: -0.5px; }
+    .header .subtitle { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .header .date { font-size: 14px; color: #94a3b8; margin-top: 8px; }
+
+    .card { background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 20px; margin-bottom: 12px; }
+    .card h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #1f2937; }
+
+    .ai-brief { background: linear-gradient(135deg, #0c1a3a 0%, #111827 100%); border: 1px solid #1e3a5f; }
+    .ai-brief h2 { color: #60a5fa; }
+    .ai-brief .content { color: #cbd5e1; font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
+
+    .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+    .metric-box { background: #0f172a; border: 1px solid #1f2937; border-radius: 8px; padding: 12px; text-align: center; }
+    .metric-box .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; }
+    .metric-box .value { font-size: 18px; font-weight: 700; margin-top: 4px; }
+    .metric-box .change { font-size: 12px; margin-top: 2px; }
+
+    .sentiment-bar { height: 8px; border-radius: 4px; background: linear-gradient(90deg, #ef4444, #f59e0b, #22c55e); margin: 10px 0; position: relative; }
+    .sentiment-marker { position: absolute; top: -4px; width: 16px; height: 16px; background: #fff; border-radius: 50%; border: 2px solid #0a0e17; transform: translateX(-50%); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; padding: 8px 10px; border-bottom: 1px solid #1f2937; }
+    td { padding: 10px; border-bottom: 1px solid #111827; }
+    tr:hover { background: #0f172a; }
+
+    .positive { color: #34d399; }
+    .negative { color: #f87171; }
+
+    .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-add { background: #064e3b; color: #6ee7b7; }
+    .badge-hold { background: #1e3a5f; color: #93c5fd; }
+    .badge-watch { background: #3b3510; color: #fde68a; }
+    .badge-trim { background: #4c1d1d; color: #fca5a5; }
+    .badge-exit { background: #7f1d1d; color: #fecaca; }
+    .badge-buy { background: #064e3b; color: #6ee7b7; }
+    .badge-strong-buy { background: #052e16; color: #4ade80; border: 1px solid #16a34a; }
+    .badge-sell { background: #4c1d1d; color: #fca5a5; }
+    .badge-strong-sell { background: #7f1d1d; color: #fecaca; }
+    .badge-new { background: #1e1b4b; color: #a5b4fc; }
+
+    .stock-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1f2937; }
+    .stock-row:last-child { border-bottom: none; }
+    .stock-info { flex: 1; }
+    .stock-symbol { font-weight: 700; font-size: 14px; color: #f1f5f9; }
+    .stock-name { font-size: 11px; color: #64748b; }
+    .stock-price { font-size: 14px; font-weight: 600; text-align: right; }
+    .stock-signals { margin-top: 4px; }
+    .signal-tag { display: inline-block; font-size: 10px; background: #1f2937; color: #94a3b8; padding: 2px 6px; border-radius: 3px; margin: 2px 2px 0 0; }
+
+    .action-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #1f2937; gap: 12px; }
+    .action-row:last-child { border-bottom: none; }
+    .action-detail { font-size: 11px; color: #64748b; margin-top: 2px; }
+
+    .sector-bar { display: flex; align-items: center; padding: 6px 0; }
+    .sector-name { width: 140px; font-size: 12px; color: #94a3b8; }
+    .sector-value { font-size: 12px; font-weight: 600; width: 60px; text-align: right; }
+    .sector-bar-track { flex: 1; height: 6px; background: #1f2937; border-radius: 3px; margin: 0 10px; overflow: hidden; }
+    .sector-bar-fill { height: 100%; border-radius: 3px; }
+
+    .news-item { padding: 8px 0; border-bottom: 1px solid #1f2937; }
+    .news-item:last-child { border-bottom: none; }
+    .news-item a { color: #93c5fd; text-decoration: none; font-size: 13px; }
+    .news-item a:hover { color: #bfdbfe; }
+    .news-source { font-size: 10px; color: #4b5563; margin-left: 8px; }
+
+    .trending-tag { display: inline-block; background: #1f2937; border: 1px solid #374151; color: #d1d5db; padding: 4px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; margin: 3px; }
+
+    .footer { text-align: center; padding: 20px; font-size: 11px; color: #4b5563; }
+    .footer a { color: #64748b; }
+
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, #1f2937, transparent); margin: 4px 0; }
 </style>
 </head>
 <body>
+<div class="container">
+
 <div class="header">
-    <h1>Daily Market Intelligence Report</h1>
-    <p>{{ date }} | Pre-Market Analysis</p>
+    <h1>Market Intelligence Briefing</h1>
+    <div class="subtitle">AI-Powered Daily Analysis</div>
+    <div class="date">{{ date }} &bull; Pre-Market &bull; {{ generated_at }} PST</div>
 </div>
 
 {% if ai_summary %}
-<div class="section">
-    <h2>AI Market Analysis</h2>
-    <div style="line-height:1.6; color:#333; white-space:pre-wrap;">{{ ai_summary }}</div>
-</div>
-{% endif %}
-
-{% if fear_greed %}
-<div class="section">
-    <h2>Market Sentiment</h2>
-    <div class="fear-greed {{ fear_greed.rating|lower|replace(' ', '-') }}">
-        {{ fear_greed.score|int }}/100
-    </div>
-    <p style="text-align:center; color:#666;">CNN Fear & Greed Index: <strong>{{ fear_greed.rating }}</strong></p>
+<div class="card ai-brief">
+    <h2>Morning Briefing</h2>
+    <div class="content">{{ ai_summary }}</div>
 </div>
 {% endif %}
 
 {% if indices %}
-<div class="section">
-    <h2>Market Indices</h2>
-    <table>
-        <tr><th>Index</th><th>Price</th><th>Change</th></tr>
+<div class="card">
+    <h2>Market Pulse</h2>
+    <div class="metric-grid">
         {% for name, data in indices.items() %}
-        <tr>
-            <td>{{ name }}</td>
-            <td>${{ "{:,.2f}".format(data.price) }}</td>
-            <td class="{{ 'positive' if data.change_pct >= 0 else 'negative' }}">
+        <div class="metric-box">
+            <div class="label">{{ name }}</div>
+            <div class="value {{ 'positive' if data.change_pct >= 0 else 'negative' }}">
                 {{ "+" if data.change_pct >= 0 }}{{ data.change_pct }}%
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-</div>
-{% endif %}
-
-{% if sectors %}
-<div class="section">
-    <h2>Sector Performance</h2>
-    <table>
-        <tr><th>Sector</th><th>Daily</th><th>Weekly</th></tr>
-        {% for sector, data in sectors.items() %}
-        <tr>
-            <td>{{ sector }}</td>
-            <td class="{{ 'positive' if data.daily_change >= 0 else 'negative' }}">
-                {{ "+" if data.daily_change >= 0 }}{{ data.daily_change }}%
-            </td>
-            <td class="{{ 'positive' if data.weekly_change >= 0 else 'negative' }}">
-                {{ "+" if data.weekly_change >= 0 }}{{ data.weekly_change }}%
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-</div>
-{% endif %}
-
-{% if top_picks %}
-<div class="section">
-    <h2>Top Investment Opportunities</h2>
-    {% for pick in top_picks %}
-    <div class="stock-row">
-        <div>
-            <span class="stock-name">{{ pick.symbol }}</span>
-            <span style="color:#666; font-size:13px;"> - {{ pick.name }}</span><br>
-            <span style="font-size:13px;">${{ pick.price }}
-                <span class="{{ 'positive' if pick.change_pct >= 0 else 'negative' }}">
-                    ({{ "+" if pick.change_pct >= 0 }}{{ pick.change_pct }}%)
-                </span>
-            </span><br>
-            {% for signal in pick.signals[:3] %}
-            <span class="indicator">{{ signal }}</span>
-            {% endfor %}
+            </div>
+            <div class="change">${{ "{:,.0f}".format(data.price) }}</div>
         </div>
-        <div>
-            <span class="signal-badge {{ pick.rating|lower|replace(' ', '-') }}">{{ pick.rating }}</span><br>
-            <span style="font-size:12px; color:#666;">Score: {{ pick.total_score }}</span>
+        {% endfor %}
+    </div>
+    {% if fear_greed %}
+    <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid #1f2937;">
+        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+            <span style="color: #f87171;">Extreme Fear</span>
+            <span style="color: #94a3b8; font-weight: 600;">Fear & Greed: {{ fear_greed.score|int }}/100 ({{ fear_greed.rating }})</span>
+            <span style="color: #34d399;">Extreme Greed</span>
+        </div>
+        <div class="sentiment-bar">
+            <div class="sentiment-marker" style="left: {{ fear_greed.score }}%;"></div>
         </div>
     </div>
-    {% endfor %}
-</div>
-{% endif %}
-
-{% if portfolio_summary %}
-<div class="section">
-    <h2>Your Robinhood Portfolio</h2>
-    <table>
-        <tr>
-            <td><strong>Total Equity</strong></td>
-            <td>${{ "{:,.2f}".format(portfolio_summary.equity) }}</td>
-        </tr>
-        <tr>
-            <td><strong>Market Value</strong></td>
-            <td>${{ "{:,.2f}".format(portfolio_summary.market_value) }}</td>
-        </tr>
-    </table>
-
-    {% if holdings %}
-    <h3 style="margin-top:15px; font-size:14px; color:#666;">Current Holdings</h3>
-    <table>
-        <tr><th>Symbol</th><th>Shares</th><th>Avg Cost</th><th>Current</th><th>Return</th></tr>
-        {% for h in holdings[:15] %}
-        <tr>
-            <td><strong>{{ h.symbol }}</strong></td>
-            <td>{{ "%.2f"|format(h.quantity) }}</td>
-            <td>${{ "%.2f"|format(h.avg_cost) }}</td>
-            <td>${{ "%.2f"|format(h.current_price) }}</td>
-            <td class="{{ 'positive' if h.total_return_pct >= 0 else 'negative' }}">
-                {{ "+" if h.total_return_pct >= 0 }}{{ "%.1f"|format(h.total_return_pct) }}%
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
     {% endif %}
 </div>
 {% endif %}
 
-{% if portfolio_suggestions %}
-<div class="section">
-    <h2>Portfolio Action Items</h2>
-    {% for s in portfolio_suggestions %}
-    <div class="stock-row" style="align-items:flex-start;">
+{% if portfolio_actions %}
+<div class="card">
+    <h2>Your Portfolio &mdash; Today's Actions</h2>
+    {% for stock in portfolio_actions %}
+    <div class="action-row">
         <div>
-            <span class="signal-badge {% if s.type == 'WARNING' %}strong-sell{% elif s.type == 'REDUCE' %}sell{% elif s.type == 'ADD' %}buy{% elif s.type == 'NEW' %}strong-buy{% elif s.type == 'TAX' %}hold{% else %}hold{% endif %}">
-                {{ s.type }}
-            </span>
-            <strong style="margin-left:8px;">{{ s.symbol }}</strong>
+            <span class="badge badge-{{ stock.action|lower|replace(' ', '-') }}">{{ stock.action }}</span>
         </div>
-        <div style="font-size:13px; color:#444; margin-top:4px;">{{ s.message }}</div>
+        <div class="stock-info">
+            <span class="stock-symbol">{{ stock.symbol }}</span>
+            <span class="stock-name">{{ stock.name }}</span>
+            <div class="action-detail">{{ stock.action_detail }}</div>
+        </div>
+        <div class="stock-price">
+            <div>${{ stock.price }}</div>
+            <div class="{{ 'positive' if stock.change_pct >= 0 else 'negative' }}" style="font-size:12px;">
+                {{ "+" if stock.change_pct >= 0 }}{{ stock.change_pct }}%
+            </div>
+        </div>
     </div>
     {% endfor %}
 </div>
 {% endif %}
 
+{% if opportunities %}
+<div class="card">
+    <h2>New Opportunities</h2>
+    <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">High-scoring stocks not in your portfolio</p>
+    {% for stock in opportunities %}
+    <div class="stock-row">
+        <div class="stock-info">
+            <span class="stock-symbol">{{ stock.symbol }}</span>
+            <span class="stock-name">{{ stock.name }}</span>
+            <div class="stock-signals">
+                {% for signal in stock.signals[:3] %}
+                <span class="signal-tag">{{ signal }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        <div style="text-align: right;">
+            <span class="badge badge-{{ stock.rating|lower|replace(' ', '-') }}">{{ stock.rating }}</span>
+            <div class="stock-price" style="margin-top:4px;">
+                ${{ stock.price }}
+                <span class="{{ 'positive' if stock.change_pct >= 0 else 'negative' }}" style="font-size:12px;">
+                    ({{ "+" if stock.change_pct >= 0 }}{{ stock.change_pct }}%)
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if sectors %}
+<div class="card">
+    <h2>Sector Rotation</h2>
+    {% for sector, data in sectors.items() %}
+    <div class="sector-bar">
+        <span class="sector-name">{{ sector }}</span>
+        <div class="sector-bar-track">
+            {% if data.weekly_change >= 0 %}
+            <div class="sector-bar-fill" style="width: {{ [data.weekly_change * 5, 100]|min }}%; background: linear-gradient(90deg, #065f46, #34d399);"></div>
+            {% else %}
+            <div class="sector-bar-fill" style="width: {{ [(-data.weekly_change) * 5, 100]|min }}%; background: linear-gradient(90deg, #991b1b, #f87171);"></div>
+            {% endif %}
+        </div>
+        <span class="sector-value {{ 'positive' if data.weekly_change >= 0 else 'negative' }}">{{ "+" if data.weekly_change >= 0 }}{{ data.weekly_change }}%</span>
+    </div>
+    {% endfor %}
+    <div style="font-size: 10px; color: #4b5563; margin-top: 8px;">Weekly performance</div>
+</div>
+{% endif %}
+
 {% if fool_picks %}
-<div class="section">
-    <h2>Motley Fool Insights</h2>
-    {% for pick in fool_picks %}
+<div class="card">
+    <h2>Motley Fool Recommendations</h2>
+    {% for pick in fool_picks[:8] %}
     <div class="news-item">
-        <strong>{{ pick.title }}</strong>
-        <span class="news-source">{{ pick.source }}</span>
+        <span class="badge badge-new" style="margin-right: 6px;">{{ pick.source }}</span>
+        <strong style="color: #e2e8f0; font-size: 13px;">{{ pick.title }}</strong>
     </div>
     {% endfor %}
 </div>
 {% endif %}
 
 {% if news %}
-<div class="section">
-    <h2>Key Market News</h2>
-    {% for article in news[:10] %}
+<div class="card">
+    <h2>Market Headlines</h2>
+    {% for article in news[:8] %}
     <div class="news-item">
-        <a href="{{ article.link }}" style="text-decoration:none; color:#1a237e;">{{ article.title }}</a>
+        <a href="{{ article.link }}">{{ article.title }}</a>
         <span class="news-source">{{ article.source }}</span>
     </div>
     {% endfor %}
@@ -196,19 +231,22 @@ REPORT_TEMPLATE = """
 {% endif %}
 
 {% if reddit_trending %}
-<div class="section">
-    <h2>Trending on Reddit</h2>
-    <p style="font-size:13px; color:#666;">Most mentioned tickers in r/wallstreetbets, r/stocks, r/investing:</p>
-    {% for ticker, count in reddit_trending[:10] %}
-    <span class="indicator">{{ ticker }} ({{ count }})</span>
+<div class="card">
+    <h2>Reddit Trending Tickers</h2>
+    <div style="margin-top: 4px;">
+    {% for ticker, count in reddit_trending[:12] %}
+        <span class="trending-tag">${{ ticker }} <span style="color:#64748b;">({{ count }})</span></span>
     {% endfor %}
+    </div>
 </div>
 {% endif %}
 
-<div class="disclaimer">
-    <p>This report is for informational purposes only and does not constitute financial advice.
-    Always do your own research before making investment decisions. Past performance does not guarantee future results.</p>
-    <p>Generated at {{ generated_at }} PST</p>
+<div class="footer">
+    <div class="divider"></div>
+    <p style="margin-top: 12px;">This report is for informational purposes only. Not financial advice. Always DYOR.</p>
+    <p style="margin-top: 4px;">Generated by Market Intelligence Agent &bull; {{ generated_at }} PST</p>
+</div>
+
 </div>
 </body>
 </html>
@@ -221,12 +259,14 @@ def generate_report(data):
     return template.render(
         date=datetime.now().strftime("%B %d, %Y"),
         generated_at=datetime.now().strftime("%I:%M %p"),
+        ai_summary=data.get("ai_summary"),
         fear_greed=data.get("fear_greed"),
         indices=data.get("indices", {}),
         sectors=data.get("sectors", {}),
-        top_picks=data.get("top_picks", []),
+        portfolio_actions=data.get("portfolio_actions", []),
+        opportunities=data.get("opportunities", []),
         fool_picks=data.get("fool_picks", []),
+        fool_articles=data.get("fool_articles", []),
         news=data.get("news", []),
         reddit_trending=data.get("reddit_trending", []),
-        ai_summary=data.get("ai_summary"),
     )

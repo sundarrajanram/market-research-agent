@@ -1,6 +1,7 @@
-"""Scrape Motley Fool recommendations (requires subscription login)."""
+"""Scrape Motley Fool recommendations and portfolio (requires subscription login)."""
 import requests
 from bs4 import BeautifulSoup
+import re
 
 
 class MotleyFoolScraper:
@@ -12,7 +13,7 @@ class MotleyFoolScraper:
         self.password = password
         self.session = requests.Session()
         self.session.headers.update({
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         })
         self.logged_in = False
 
@@ -40,6 +41,105 @@ class MotleyFoolScraper:
         except Exception as e:
             print(f"Motley Fool login error: {e}")
             return False
+
+    def get_portfolio(self, portfolio_name="My Robinhood Stock"):
+        """Get stocks from a user's custom portfolio."""
+        if not self.logged_in:
+            self.login()
+
+        holdings = []
+        try:
+            # Try portfolio pages
+            urls = [
+                f"{self.BASE_URL}/portfolios/",
+                f"{self.BASE_URL}/premium/portfolios/",
+                f"{self.BASE_URL}/my-fool/portfolios/",
+            ]
+            for url in urls:
+                resp = self.session.get(url, timeout=15)
+                if resp.status_code != 200:
+                    continue
+
+                soup = BeautifulSoup(resp.text, "html.parser")
+
+                # Find the specific portfolio by name
+                portfolio_link = soup.find("a", string=re.compile(portfolio_name, re.IGNORECASE))
+                if not portfolio_link:
+                    portfolio_link = soup.find(string=re.compile(portfolio_name, re.IGNORECASE))
+                    if portfolio_link:
+                        portfolio_link = portfolio_link.find_parent("a")
+
+                if portfolio_link:
+                    href = portfolio_link.get("href", "")
+                    if href and not href.startswith("http"):
+                        href = self.BASE_URL + href
+                    if href:
+                        portfolio_resp = self.session.get(href, timeout=15)
+                        if portfolio_resp.status_code == 200:
+                            holdings = self._parse_portfolio_page(portfolio_resp.text)
+                            if holdings:
+                                break
+
+                # If no direct link, try parsing the page for stock rows
+                if not holdings:
+                    holdings = self._parse_portfolio_page(resp.text)
+                    if holdings:
+                        break
+
+        except Exception as e:
+            print(f"Error fetching portfolio: {e}")
+        return holdings
+
+    def _parse_portfolio_page(self, html):
+        """Parse a portfolio page for stock holdings."""
+        holdings = []
+        soup = BeautifulSoup(html, "html.parser")
+
+        # Look for table rows with stock data
+        tables = soup.find_all("table")
+        for table in tables:
+            rows = table.find_all("tr")
+            for row in rows[1:]:  # Skip header
+                cells = row.find_all(["td", "th"])
+                if len(cells) >= 2:
+                    symbol_cell = cells[0]
+                    symbol = symbol_cell.get_text(strip=True).upper()
+                    # Filter out non-ticker text
+                    if re.match(r'^[A-Z]{1,5}$', symbol):
+                        holding = {"symbol": symbol}
+                        if len(cells) >= 3:
+                            try:
+                                holding["shares"] = float(re.sub(r'[^\d.]', '', cells[1].get_text(strip=True)) or 0)
+                            except (ValueError, IndexError):
+                                holding["shares"] = 0
+                        if len(cells) >= 4:
+                            try:
+                                holding["cost_basis"] = float(re.sub(r'[^\d.]', '', cells[2].get_text(strip=True)) or 0)
+                            except (ValueError, IndexError):
+                                holding["cost_basis"] = 0
+                        holdings.append(holding)
+
+        # Also try div-based layouts
+        if not holdings:
+            stock_items = soup.find_all("div", {"data-symbol": True})
+            for item in stock_items:
+                symbol = item.get("data-symbol", "").upper()
+                if symbol:
+                    holdings.append({"symbol": symbol, "shares": 0, "cost_basis": 0})
+
+        # Try finding ticker symbols in links
+        if not holdings:
+            ticker_links = soup.find_all("a", href=re.compile(r'/quote/[A-Z]+'))
+            seen = set()
+            for link in ticker_links:
+                match = re.search(r'/quote/([A-Z]+)', link.get("href", ""))
+                if match:
+                    symbol = match.group(1)
+                    if symbol not in seen:
+                        seen.add(symbol)
+                        holdings.append({"symbol": symbol, "shares": 0, "cost_basis": 0})
+
+        return holdings
 
     def get_stock_advisor_picks(self):
         """Get latest Stock Advisor recommendations."""
