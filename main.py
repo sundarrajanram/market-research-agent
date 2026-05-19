@@ -15,6 +15,14 @@ from data_sources.news_sentiment import (
     get_fear_greed_index,
     get_reddit_sentiment,
 )
+from data_sources.alerts import (
+    get_earnings_alerts,
+    get_insider_activity,
+    get_price_alerts,
+    calculate_position_sizes,
+    log_signals,
+    check_signal_accuracy,
+)
 from data_sources.motley_fool import MotleyFoolScraper
 from data_sources.portfolio_loader import load_portfolio
 from analysis.technical import score_stock, classify_signal
@@ -128,7 +136,44 @@ def run_research():
     fear_greed = get_fear_greed_index()
     reddit_trending = get_reddit_sentiment()
 
-    # 9. AI synthesis
+    # 9. New data sources (with graceful error handling)
+    print("  Checking earnings calendar...")
+    earnings_alerts = []
+    try:
+        earnings_alerts = get_earnings_alerts(portfolio_symbols)
+    except Exception as e:
+        print(f"    Earnings alerts failed (non-fatal): {e}")
+
+    print("  Checking insider activity...")
+    insider_activity = {}
+    try:
+        insider_activity = get_insider_activity(portfolio_symbols)
+    except Exception as e:
+        print(f"    Insider activity failed (non-fatal): {e}")
+
+    print("  Checking price alerts...")
+    price_alerts = []
+    try:
+        price_alerts = get_price_alerts(stock_data, portfolio_symbols)
+    except Exception as e:
+        print(f"    Price alerts failed (non-fatal): {e}")
+
+    print("  Calculating position sizes...")
+    position_sizing = {}
+    try:
+        position_sizing = calculate_position_sizes(my_portfolio, stock_data, opportunities)
+    except Exception as e:
+        print(f"    Position sizing failed (non-fatal): {e}")
+
+    print("  Logging signals and checking history...")
+    signal_accuracy = {}
+    try:
+        log_signals(scored_stocks)
+        signal_accuracy = check_signal_accuracy()
+    except Exception as e:
+        print(f"    Signal history failed (non-fatal): {e}")
+
+    # 10. AI synthesis
     print("  Generating AI market narrative...")
     report_data = {
         "indices": indices,
@@ -141,15 +186,20 @@ def run_research():
         "reddit_trending": reddit_trending,
         "fool_picks": fool_picks,
         "fool_articles": fool_articles,
+        "earnings_alerts": earnings_alerts,
+        "insider_activity": insider_activity,
+        "price_alerts": price_alerts,
+        "position_sizing": position_sizing,
+        "signal_accuracy": signal_accuracy,
     }
     ai_summary = generate_ai_summary(report_data)
     report_data["ai_summary"] = ai_summary
 
-    # 10. Generate report
+    # 11. Generate report
     print("  Generating report...")
     html_report = generate_report(report_data)
 
-    # 11. Send or save report
+    # 12. Send or save report
     print("  Sending report...")
     send_report(html_report)
 

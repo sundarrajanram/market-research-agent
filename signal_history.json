@@ -1,0 +1,77 @@
+{
+  "signals": [
+    {
+      "date": "2026-05-19",
+      "symbol": "CRM",
+      "price_at_signal": 179.42,
+      "score": 25,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-19",
+      "symbol": "VST",
+      "price_at_signal": 134.71,
+      "score": 25,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-19",
+      "symbol": "MGNI",
+      "price_at_signal": 13.39,
+      "score": 25,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-19",
+      "symbol": "META",
+      "price_at_signal": 602.61,
+      "score": 25,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-19",
+      "symbol": "V",
+      "price_at_signal": 329.91,
+      "score": 20,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-19",
+      "symbol": "VEEV",
+      "price_at_signal": 163.31,
+      "score": 20,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-19",
+      "symbol": "JNJ",
+      "price_at_signal": 230.0,
+      "score": 20,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-19",
+      "symbol": "COST",
+      "price_at_signal": 1094.32,
+      "score": -25,
+      "rating": "SELL",
+      "checked": false,
+      "outcome": null
+    }
+  ],
+  "accuracy_stats": {}
+}

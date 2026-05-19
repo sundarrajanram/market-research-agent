@@ -3,13 +3,27 @@ name: Daily Market Research Report
 on:
   schedule:
     # 5 AM PST = 12:00 PM UTC (during PDT) / 1:00 PM UTC (during PST)
-    # Using 12:00 UTC for PDT (March-November)
     - cron: '0 12 * * 1-5'
-  workflow_dispatch: # Allow manual trigger
+    # 7 AM PST = 14:00 PM UTC (during PDT) / 15:00 PM UTC (during PST)
+    - cron: '0 14 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      report_type:
+        description: 'Which report to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - market_open
+          - both
 
 jobs:
-  generate-report:
+  full-report:
     runs-on: ubuntu-latest
+    if: >-
+      (github.event.schedule == '0 12 * * 1-5') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.report_type == 'full' || github.event.inputs.report_type == 'both'))
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -22,7 +36,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run market research
+      - name: Run full market research report
         env:
           FOOL_EMAIL: ${{ secrets.FOOL_EMAIL }}
           FOOL_PASSWORD: ${{ secrets.FOOL_PASSWORD }}
@@ -33,3 +47,29 @@ jobs:
           RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python main.py
+
+  market-open-report:
+    runs-on: ubuntu-latest
+    if: >-
+      (github.event.schedule == '0 14 * * 1-5') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.report_type == 'market_open' || github.event.inputs.report_type == 'both'))
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run market open flash report
+        env:
+          SMTP_SERVER: smtp.gmail.com
+          SMTP_PORT: '587'
+          SMTP_EMAIL: ${{ secrets.SMTP_EMAIL }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+        run: python market_open.py

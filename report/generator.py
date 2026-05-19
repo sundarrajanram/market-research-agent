@@ -171,6 +171,70 @@ REPORT_TEMPLATE = """
 </div>
 {% endif %}
 
+{% if earnings_alerts %}
+<div class="card">
+    <h2>Earnings Calendar - Upcoming</h2>
+    <p style="font-size: 12px; color: #fbbf24; margin-bottom: 12px;">Portfolio stocks reporting earnings soon</p>
+    {% for alert in earnings_alerts %}
+    <div class="stock-row">
+        <div class="stock-info">
+            <span class="stock-symbol">{{ alert.symbol }}</span>
+            <span style="font-size: 12px; color: #fbbf24; margin-left: 8px;">{{ alert.earnings_date }}</span>
+        </div>
+        <div style="text-align: right;">
+            <span class="badge" style="background: #78350f; color: #fde68a;">
+                {% if alert.days_until == 0 %}TODAY{% elif alert.days_until == 1 %}TOMORROW{% else %}{{ alert.days_until }} DAYS{% endif %}
+            </span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if insider_activity %}
+<div class="card">
+    <h2>Insider Activity</h2>
+    <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Recent insider trades for your holdings</p>
+    {% for symbol, trades in insider_activity.items() %}
+    <div style="margin-bottom: 12px;">
+        <div style="font-weight: 700; font-size: 14px; color: #f1f5f9; margin-bottom: 6px;">{{ symbol }}</div>
+        {% for trade in trades[:3] %}
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #1f2937; font-size: 12px;">
+            <div>
+                <span class="badge {% if trade.type == 'BUY' %}badge-buy{% else %}badge-trim{% endif %}" style="font-size: 9px; margin-right: 4px;">{{ trade.type }}</span>
+                <span style="color: #94a3b8;">{{ trade.insider }}</span>
+                <span style="color: #4b5563; margin-left: 4px;">({{ trade.title }})</span>
+            </div>
+            <div style="color: #cbd5e1;">
+                <span>{{ trade.value }}</span>
+                <span style="color: #4b5563; margin-left: 6px;">{{ trade.date }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if price_alerts %}
+<div class="card">
+    <h2>Price Alerts</h2>
+    {% for stock_alert in price_alerts %}
+    <div style="margin-bottom: 10px;">
+        <span class="stock-symbol">{{ stock_alert.symbol }}</span>
+        <span style="font-size: 12px; color: #64748b; margin-left: 6px;">${{ stock_alert.price }}</span>
+        <div style="margin-top: 4px;">
+        {% for alert in stock_alert.alerts %}
+            <span class="signal-tag" style="{% if alert.severity == 'bullish' %}background: #064e3b; color: #6ee7b7;{% elif alert.severity == 'bearish' %}background: #4c1d1d; color: #fca5a5;{% elif alert.severity == 'warning' %}background: #78350f; color: #fde68a;{% elif alert.severity == 'alert' %}background: #1e1b4b; color: #a5b4fc;{% endif %}">
+                {{ alert.message }}
+            </span>
+        {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
 {% if opportunities %}
 <div class="card">
     <h2>New Opportunities</h2>
@@ -182,6 +246,15 @@ REPORT_TEMPLATE = """
                 <span class="stock-symbol">{{ stock.symbol }}</span>
             </a>
             <span class="stock-name">{{ stock.name }}</span>
+            {% if position_sizing and position_sizing.suggestions %}
+                {% for ps in position_sizing.suggestions %}
+                    {% if ps.symbol == stock.symbol %}
+                    <div style="margin-top: 4px; font-size: 11px; color: #a78bfa;">
+                        Position size: ${{ "{:,.0f}".format(ps.suggested_amount) }} ({{ ps.suggested_shares }} shares) &bull; Conviction: {{ ps.conviction }}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
             <div class="stock-signals">
                 {% for signal in stock.signals[:3] %}
                 <span class="signal-tag">{{ signal }}</span>
@@ -205,6 +278,11 @@ REPORT_TEMPLATE = """
         </div>
     </div>
     {% endfor %}
+    {% if position_sizing and position_sizing.total_portfolio_value %}
+    <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #1f2937; font-size: 11px; color: #64748b;">
+        Portfolio value: ${{ "{:,.0f}".format(position_sizing.total_portfolio_value) }} &bull; Position sizes based on conviction score
+    </div>
+    {% endif %}
 </div>
 {% endif %}
 
@@ -263,6 +341,31 @@ REPORT_TEMPLATE = """
 </div>
 {% endif %}
 
+{% if signal_accuracy and signal_accuracy.checked %}
+<div class="card">
+    <h2>Signal Accuracy Tracker</h2>
+    <div style="display: flex; gap: 12px;">
+        <div style="flex:1; background: #0f172a; border: 1px solid #1f2937; border-radius: 6px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Accuracy</div>
+            <div style="font-size: 20px; font-weight: 700; color: {{ '#34d399' if signal_accuracy.accuracy_pct >= 60 else ('#fbbf24' if signal_accuracy.accuracy_pct >= 45 else '#f87171') }};">{{ signal_accuracy.accuracy_pct }}%</div>
+        </div>
+        <div style="flex:1; background: #0f172a; border: 1px solid #1f2937; border-radius: 6px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Correct</div>
+            <div style="font-size: 20px; font-weight: 700; color: #34d399;">{{ signal_accuracy.correct }}</div>
+        </div>
+        <div style="flex:1; background: #0f172a; border: 1px solid #1f2937; border-radius: 6px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Checked</div>
+            <div style="font-size: 20px; font-weight: 700; color: #94a3b8;">{{ signal_accuracy.checked }}</div>
+        </div>
+        <div style="flex:1; background: #0f172a; border: 1px solid #1f2937; border-radius: 6px; padding: 10px; text-align: center;">
+            <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Total Signals</div>
+            <div style="font-size: 20px; font-weight: 700; color: #94a3b8;">{{ signal_accuracy.total_signals }}</div>
+        </div>
+    </div>
+    <div style="font-size: 10px; color: #4b5563; margin-top: 8px;">Signals verified after 7-day holding period</div>
+</div>
+{% endif %}
+
 <div class="footer">
     <div class="divider"></div>
     <p style="margin-top: 12px;">This report is for informational purposes only. Not financial advice. Always DYOR.</p>
@@ -291,4 +394,9 @@ def generate_report(data):
         fool_articles=data.get("fool_articles", []),
         news=data.get("news", []),
         reddit_trending=data.get("reddit_trending", []),
+        earnings_alerts=data.get("earnings_alerts", []),
+        insider_activity=data.get("insider_activity", {}),
+        price_alerts=data.get("price_alerts", []),
+        position_sizing=data.get("position_sizing", {}),
+        signal_accuracy=data.get("signal_accuracy", {}),
     )
