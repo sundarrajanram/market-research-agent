@@ -104,34 +104,6 @@ REPORT_TEMPLATE = """
 </div>
 {% endif %}
 
-{% if indices %}
-<div class="card">
-    <h2>Market Pulse</h2>
-    <div class="metric-grid">
-        {% for name, data in indices.items() %}
-        <div class="metric-box">
-            <div class="label">{{ name }}</div>
-            <div class="value {{ 'positive' if data.change_pct >= 0 else 'negative' }}">
-                {{ "+" if data.change_pct >= 0 }}{{ data.change_pct }}%
-            </div>
-            <div class="change">${{ "{:,.0f}".format(data.price) }}</div>
-        </div>
-        {% endfor %}
-    </div>
-    {% if fear_greed %}
-    <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid #1f2937;">
-        <div style="display: flex; justify-content: space-between; font-size: 12px;">
-            <span style="color: #f87171;">Extreme Fear</span>
-            <span style="color: #94a3b8; font-weight: 600;">Fear & Greed: {{ fear_greed.score|int }}/100 ({{ fear_greed.rating }})</span>
-            <span style="color: #34d399;">Extreme Greed</span>
-        </div>
-        <div class="sentiment-bar">
-            <div class="sentiment-marker" style="left: {{ fear_greed.score }}%;"></div>
-        </div>
-    </div>
-    {% endif %}
-</div>
-{% endif %}
 
 {% if portfolio_actions %}
 <div class="card">
@@ -286,25 +258,6 @@ REPORT_TEMPLATE = """
 </div>
 {% endif %}
 
-{% if sectors %}
-<div class="card">
-    <h2>Sector Rotation</h2>
-    {% for sector, data in sectors.items() %}
-    <div class="sector-bar">
-        <span class="sector-name">{{ sector }}</span>
-        <div class="sector-bar-track">
-            {% if data.weekly_change >= 0 %}
-            <div class="sector-bar-fill" style="width: {{ [data.weekly_change * 5, 100]|min }}%; background: linear-gradient(90deg, #065f46, #34d399);"></div>
-            {% else %}
-            <div class="sector-bar-fill" style="width: {{ [(-data.weekly_change) * 5, 100]|min }}%; background: linear-gradient(90deg, #991b1b, #f87171);"></div>
-            {% endif %}
-        </div>
-        <span class="sector-value {{ 'positive' if data.weekly_change >= 0 else 'negative' }}">{{ "+" if data.weekly_change >= 0 }}{{ data.weekly_change }}%</span>
-    </div>
-    {% endfor %}
-    <div style="font-size: 10px; color: #4b5563; margin-top: 8px;">Weekly performance</div>
-</div>
-{% endif %}
 
 {% if fool_picks %}
 <div class="card">
@@ -337,6 +290,56 @@ REPORT_TEMPLATE = """
     {% for ticker, count in reddit_trending[:12] %}
         <span class="trending-tag">${{ ticker }} <span style="color:#64748b;">({{ count }})</span></span>
     {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if indices or sectors %}
+<div class="card">
+    <h2>Market Overview</h2>
+    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        {% if indices %}
+        <div style="flex: 1; min-width: 280px;">
+            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 10px;">Indices</div>
+            {% for name, data in indices.items() %}
+            <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #1f2937;">
+                <span style="font-size: 12px; color: #94a3b8;">{{ name }}</span>
+                <span style="font-size: 12px;">
+                    <span style="color: #cbd5e1;">${{ "{:,.0f}".format(data.price) }}</span>
+                    <span class="{{ 'positive' if data.change_pct >= 0 else 'negative' }}" style="margin-left: 8px; font-weight: 600;">{{ "+" if data.change_pct >= 0 }}{{ data.change_pct }}%</span>
+                </span>
+            </div>
+            {% endfor %}
+            {% if fear_greed %}
+            <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #1f2937;">
+                <div style="font-size: 11px; color: #94a3b8; text-align: center;">
+                    Fear & Greed: <strong style="color: #fbbf24;">{{ fear_greed.score|int }}/100</strong> ({{ fear_greed.rating }})
+                </div>
+                <div class="sentiment-bar" style="margin-top: 6px;">
+                    <div class="sentiment-marker" style="left: {{ fear_greed.score }}%;"></div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if sectors %}
+        <div style="flex: 1; min-width: 280px;">
+            <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 10px;">Sector Rotation (Weekly)</div>
+            {% for sector, data in sectors.items() %}
+            <div class="sector-bar">
+                <span class="sector-name" style="width: 120px; font-size: 11px;">{{ sector }}</span>
+                <div class="sector-bar-track">
+                    {% if data.weekly_change >= 0 %}
+                    <div class="sector-bar-fill" style="width: {{ [data.weekly_change * 5, 100]|min }}%; background: linear-gradient(90deg, #065f46, #34d399);"></div>
+                    {% else %}
+                    <div class="sector-bar-fill" style="width: {{ [(-data.weekly_change) * 5, 100]|min }}%; background: linear-gradient(90deg, #991b1b, #f87171);"></div>
+                    {% endif %}
+                </div>
+                <span class="sector-value {{ 'positive' if data.weekly_change >= 0 else 'negative' }}" style="font-size: 11px;">{{ "+" if data.weekly_change >= 0 }}{{ data.weekly_change }}%</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endif %}
