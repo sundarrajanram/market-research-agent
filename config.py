@@ -23,6 +23,7 @@ WATCHLIST = [
     "AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA",
     "JPM", "V", "UNH", "XOM", "JNJ", "WMT", "PG", "MA",
     "HD", "COST", "ABBV", "CRM", "AMD", "NFLX", "AVGO",
+    "VEEV", "MOG-A", "MGNI", "NOW", "VST", "RKLB",
 ]
 
 INDICES = ["^GSPC", "^DJI", "^IXIC", "^VIX", "^RUT"]

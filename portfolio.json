@@ -2,10 +2,14 @@
     "name": "My Robinhood Portfolio",
     "last_updated": "2026-05-19",
     "holdings": [
-        {"symbol": "AAPL", "shares": 10, "avg_cost": 0},
-        {"symbol": "MSFT", "shares": 5, "avg_cost": 0},
-        {"symbol": "NVDA", "shares": 8, "avg_cost": 0},
-        {"symbol": "GOOGL", "shares": 6, "avg_cost": 0},
-        {"symbol": "AMZN", "shares": 4, "avg_cost": 0}
+        {"symbol": "VEEV", "shares": 75},
+        {"symbol": "MOG-A", "shares": 60},
+        {"symbol": "MGNI", "shares": 1300},
+        {"symbol": "NOW", "shares": 120},
+        {"symbol": "VST", "shares": 180},
+        {"symbol": "MSFT", "shares": 30},
+        {"symbol": "TSLA", "shares": 30},
+        {"symbol": "RKLB", "shares": 100},
+        {"symbol": "EMBJ", "shares": 300}
     ]
 }
