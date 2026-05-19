@@ -1,0 +1,35 @@
+name: Daily Market Research Report
+
+on:
+  schedule:
+    # 5 AM PST = 12:00 PM UTC (during PDT) / 1:00 PM UTC (during PST)
+    # Using 12:00 UTC for PDT (March-November)
+    - cron: '0 12 * * 1-5'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run market research
+        env:
+          FOOL_EMAIL: ${{ secrets.FOOL_EMAIL }}
+          FOOL_PASSWORD: ${{ secrets.FOOL_PASSWORD }}
+          SMTP_SERVER: smtp.gmail.com
+          SMTP_PORT: '587'
+          SMTP_EMAIL: ${{ secrets.SMTP_EMAIL }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python main.py
