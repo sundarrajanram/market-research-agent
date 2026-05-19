@@ -1,6 +1,84 @@
 """Generate the daily investment report — professional dark theme."""
+import re
 from datetime import datetime
 from jinja2 import Template
+
+
+def format_ai_html(text):
+    """Convert AI markdown output to styled HTML with color coding."""
+    if not text:
+        return ""
+
+    # Convert **bold headers** like **Market Mood:** to h3 tags
+    text = re.sub(
+        r'\*\*([^*]+?):\*\*',
+        r'<h3>\1</h3>',
+        text
+    )
+    # Convert remaining **bold** to strong tags
+    text = re.sub(r'\*\*([^*]+?)\*\*', r'<strong>\1</strong>', text)
+
+    # Color-code ticker symbols (uppercase 2-5 letter words preceded by common patterns)
+    text = re.sub(
+        r'\b([A-Z]{2,5})\b(?=[^<]*(?:<|$))',
+        lambda m: f'<strong style="color: #e2e8f0;">{m.group(1)}</strong>'
+        if m.group(1) in _TICKERS else m.group(0),
+        text
+    )
+
+    # Color-code positive percentages
+    text = re.sub(
+        r'(\+\d+\.?\d*%)',
+        r'<span style="color: #34d399; font-weight: 600;">\1</span>',
+        text
+    )
+    # Color-code negative percentages
+    text = re.sub(
+        r'(-\d+\.?\d*%)',
+        r'<span style="color: #f87171; font-weight: 600;">\1</span>',
+        text
+    )
+
+    # Color-code dollar amounts
+    text = re.sub(
+        r'(\$\d[\d,.]*)',
+        r'<span style="color: #fbbf24; font-weight: 500;">\1</span>',
+        text
+    )
+
+    # Convert bullet points (- item) to list items
+    lines = text.split('\n')
+    result = []
+    in_list = False
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith('- ') or stripped.startswith('• '):
+            if not in_list:
+                result.append('<ul>')
+                in_list = True
+            result.append(f'<li>{stripped[2:]}</li>')
+        else:
+            if in_list:
+                result.append('</ul>')
+                in_list = False
+            if stripped.startswith('<h3>'):
+                result.append(stripped)
+            elif stripped:
+                result.append(f'<p>{stripped}</p>')
+            else:
+                result.append('')
+    if in_list:
+        result.append('</ul>')
+
+    return '\n'.join(result)
+
+
+_TICKERS = {
+    'VEEV', 'MGNI', 'NOW', 'VST', 'MSFT', 'TSLA', 'RKLB', 'EMBJ', 'MOG',
+    'AAPL', 'GOOGL', 'AMZN', 'NVDA', 'META', 'AMD', 'NFLX', 'AVGO',
+    'JPM', 'UNH', 'XOM', 'JNJ', 'WMT', 'CRM', 'COST', 'HD',
+    'ABBV', 'PG', 'MA', 'SPY', 'QQQ', 'DIA', 'IWM', 'VIX',
+}
 
 REPORT_TEMPLATE = """
 <!DOCTYPE html>
@@ -24,7 +102,13 @@ REPORT_TEMPLATE = """
 
     .ai-brief { background: linear-gradient(135deg, #0c1a3a 0%, #111827 100%); border: 1px solid #1e3a5f; }
     .ai-brief h2 { color: #60a5fa; }
-    .ai-brief .content { color: #cbd5e1; font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
+    .ai-brief .content { color: #cbd5e1; font-size: 14px; line-height: 1.7; }
+    .ai-brief .content strong { color: #f8fafc; font-weight: 700; }
+    .ai-brief .content h3 { color: #60a5fa; font-size: 13px; font-weight: 700; margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid #1e3a5f; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ai-brief .content h3:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+    .ai-brief .content ul { list-style: none; padding: 0; margin: 8px 0; }
+    .ai-brief .content li { padding: 4px 0 4px 12px; border-left: 2px solid #1e3a5f; margin-bottom: 6px; }
+    .ai-brief .content p { margin: 8px 0; }
 
     .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
     .metric-box { background: #0f172a; border: 1px solid #1f2937; border-radius: 8px; padding: 12px; text-align: center; }
@@ -100,7 +184,7 @@ REPORT_TEMPLATE = """
 {% if ai_summary %}
 <div class="card ai-brief">
     <h2>Morning Briefing</h2>
-    <div class="content">{{ ai_summary }}</div>
+    <div class="content">{{ ai_summary_html }}</div>
 </div>
 {% endif %}
 
@@ -384,10 +468,15 @@ REPORT_TEMPLATE = """
 def generate_report(data):
     """Generate HTML report from collected data."""
     template = Template(REPORT_TEMPLATE)
+
+    ai_raw = data.get("ai_summary")
+    ai_html = format_ai_html(ai_raw) if ai_raw else ""
+
     return template.render(
         date=datetime.now().strftime("%B %d, %Y"),
         generated_at=datetime.now().strftime("%I:%M %p"),
-        ai_summary=data.get("ai_summary"),
+        ai_summary=ai_raw,
+        ai_summary_html=ai_html,
         fear_greed=data.get("fear_greed"),
         indices=data.get("indices", {}),
         sectors=data.get("sectors", {}),
