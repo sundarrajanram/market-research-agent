@@ -6,6 +6,8 @@ on:
     - cron: '0 9 * * 1-5'
     # 6:30 AM PST = 13:30 UTC (during PDT) — arrives ~7 AM with GH delay
     - cron: '30 13 * * 1-5'
+    # 12:00 PM PST = 19:00 UTC (during PDT) — EOD flash, arrives ~2 PM
+    - cron: '0 19 * * 1-5'
   workflow_dispatch:
     inputs:
       report_type:
@@ -16,14 +18,15 @@ on:
         options:
           - full
           - market_open
-          - both
+          - eod_flash
+          - all
 
 jobs:
   full-report:
     runs-on: ubuntu-latest
     if: >-
       (github.event.schedule == '0 9 * * 1-5') ||
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.report_type == 'full' || github.event.inputs.report_type == 'both'))
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.report_type == 'full' || github.event.inputs.report_type == 'all'))
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -52,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     if: >-
       (github.event.schedule == '30 13 * * 1-5') ||
-      (github.event_name == 'workflow_dispatch' && (github.event.inputs.report_type == 'market_open' || github.event.inputs.report_type == 'both'))
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.report_type == 'market_open' || github.event.inputs.report_type == 'all'))
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -73,3 +76,29 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
         run: python market_open.py
+
+  eod-flash-report:
+    runs-on: ubuntu-latest
+    if: >-
+      (github.event.schedule == '0 19 * * 1-5') ||
+      (github.event_name == 'workflow_dispatch' && (github.event.inputs.report_type == 'eod_flash' || github.event.inputs.report_type == 'all'))
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run EOD flash report
+        env:
+          SMTP_SERVER: smtp.gmail.com
+          SMTP_PORT: '587'
+          SMTP_EMAIL: ${{ secrets.SMTP_EMAIL }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+        run: python eod_flash.py

@@ -69,6 +69,36 @@ def send_market_open_report(html_content):
         return False
 
 
+def send_eod_report(html_content):
+    """Send EOD flash report via email."""
+    if not config.SMTP_PASSWORD or config.SMTP_PASSWORD == "your_gmail_app_password_here":
+        print("SMTP not configured. Saving EOD report to file instead.")
+        save_report_to_file(html_content, prefix="eod_flash")
+        return False
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = f"EOD Portfolio Flash - {datetime.now().strftime('%B %d, %Y')}"
+    msg["From"] = config.SMTP_EMAIL
+    msg["To"] = config.RECIPIENT_EMAIL
+
+    plain_text = "Please view this email in an HTML-capable email client."
+    msg.attach(MIMEText(plain_text, "plain"))
+    msg.attach(MIMEText(html_content, "html"))
+
+    try:
+        server = smtplib.SMTP(config.SMTP_SERVER, config.SMTP_PORT)
+        server.starttls()
+        server.login(config.SMTP_EMAIL, config.SMTP_PASSWORD)
+        server.sendmail(config.SMTP_EMAIL, config.RECIPIENT_EMAIL, msg.as_string())
+        server.quit()
+        print(f"EOD flash report sent to {config.RECIPIENT_EMAIL}")
+        return True
+    except Exception as e:
+        print(f"EOD flash email send failed: {e}")
+        save_report_to_file(html_content, prefix="eod_flash")
+        return False
+
+
 def save_report_to_file(html_content, prefix="report"):
     """Fallback: save report as HTML file."""
     os.makedirs(REPORTS_DIR, exist_ok=True)
