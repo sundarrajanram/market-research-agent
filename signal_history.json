@@ -71,6 +71,42 @@
       "rating": "SELL",
       "checked": false,
       "outcome": null
+    },
+    {
+      "date": "2026-05-21",
+      "symbol": "INTU",
+      "price_at_signal": 307.07,
+      "score": 25,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-21",
+      "symbol": "XOM",
+      "price_at_signal": 155.29,
+      "score": 20,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-21",
+      "symbol": "V",
+      "price_at_signal": 331.12,
+      "score": 20,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-21",
+      "symbol": "RKLB",
+      "price_at_signal": 125.45,
+      "score": -20,
+      "rating": "HOLD",
+      "checked": false,
+      "outcome": null
     }
   ],
   "accuracy_stats": {}

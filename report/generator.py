@@ -247,28 +247,81 @@ REPORT_TEMPLATE = """
 </div>
 {% endif %}
 
-{% if insider_activity %}
+{% if insider_activity and insider_activity.trades %}
 <div class="card">
     <h2>Insider Activity</h2>
-    <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Recent insider trades for your holdings</p>
-    {% for symbol, trades in insider_activity.items() %}
-    <div style="margin-bottom: 12px;">
-        <div style="font-weight: 700; font-size: 14px; color: #f1f5f9; margin-bottom: 6px;">{{ symbol }}</div>
-        {% for trade in trades[:3] %}
-        <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #1f2937; font-size: 12px;">
-            <div>
-                <span class="badge {% if trade.type == 'BUY' %}badge-buy{% else %}badge-trim{% endif %}" style="font-size: 9px; margin-right: 4px;">{{ trade.type }}</span>
-                <span style="color: #94a3b8;">{{ trade.insider }}</span>
-                <span style="color: #4b5563; margin-left: 4px;">({{ trade.title }})</span>
-            </div>
-            <div style="color: #cbd5e1;">
-                <span>{{ trade.value }}</span>
-                <span style="color: #4b5563; margin-left: 6px;">{{ trade.date }}</span>
-            </div>
+    <p style="font-size: 12px; color: #64748b; margin-bottom: 12px;">Recent insider trades across your holdings — most recent first</p>
+
+    {% if insider_activity.grouped.this_week %}
+    <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #60a5fa; margin: 12px 0 8px; padding-top: 8px;">This Week</div>
+    {% for trade in insider_activity.grouped.this_week %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1f2937; font-size: 12px;">
+        <div style="flex: 1;">
+            <span class="badge {% if trade.type == 'BUY' %}badge-buy{% else %}badge-trim{% endif %}" style="font-size: 9px; margin-right: 4px;">{{ trade.type }}</span>
+            <strong style="color: #f1f5f9;">{{ trade.symbol }}</strong>
+            <span style="color: #94a3b8; margin-left: 6px;">{{ trade.insider }}</span>
+            <span style="color: #4b5563; margin-left: 4px;">({{ trade.title }})</span>
         </div>
-        {% endfor %}
+        <div style="text-align: right; white-space: nowrap;">
+            <span style="color: #cbd5e1;">{{ trade.value }}</span>
+            <span style="color: #4b5563; margin-left: 6px;">{{ trade.date }}</span>
+        </div>
     </div>
     {% endfor %}
+    {% endif %}
+
+    {% if insider_activity.grouped.last_week %}
+    <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin: 16px 0 8px; padding-top: 8px; border-top: 1px solid #1f2937;">Last Week</div>
+    {% for trade in insider_activity.grouped.last_week %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1f2937; font-size: 12px;">
+        <div style="flex: 1;">
+            <span class="badge {% if trade.type == 'BUY' %}badge-buy{% else %}badge-trim{% endif %}" style="font-size: 9px; margin-right: 4px;">{{ trade.type }}</span>
+            <strong style="color: #f1f5f9;">{{ trade.symbol }}</strong>
+            <span style="color: #94a3b8; margin-left: 6px;">{{ trade.insider }}</span>
+            <span style="color: #4b5563; margin-left: 4px;">({{ trade.title }})</span>
+        </div>
+        <div style="text-align: right; white-space: nowrap;">
+            <span style="color: #cbd5e1;">{{ trade.value }}</span>
+            <span style="color: #4b5563; margin-left: 6px;">{{ trade.date }}</span>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if insider_activity.grouped.this_month %}
+    <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin: 16px 0 8px; padding-top: 8px; border-top: 1px solid #1f2937;">This Month</div>
+    {% for trade in insider_activity.grouped.this_month[:5] %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1f2937; font-size: 12px;">
+        <div style="flex: 1;">
+            <span class="badge {% if trade.type == 'BUY' %}badge-buy{% else %}badge-trim{% endif %}" style="font-size: 9px; margin-right: 4px;">{{ trade.type }}</span>
+            <strong style="color: #f1f5f9;">{{ trade.symbol }}</strong>
+            <span style="color: #94a3b8; margin-left: 6px;">{{ trade.insider }}</span>
+            <span style="color: #4b5563; margin-left: 4px;">({{ trade.title }})</span>
+        </div>
+        <div style="text-align: right; white-space: nowrap;">
+            <span style="color: #cbd5e1;">{{ trade.value }}</span>
+            <span style="color: #4b5563; margin-left: 6px;">{{ trade.date }}</span>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if insider_activity.grouped.older %}
+    <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #4b5563; margin: 16px 0 8px; padding-top: 8px; border-top: 1px solid #1f2937;">Older</div>
+    {% for trade in insider_activity.grouped.older[:3] %}
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1f2937; font-size: 12px; opacity: 0.7;">
+        <div style="flex: 1;">
+            <span class="badge {% if trade.type == 'BUY' %}badge-buy{% else %}badge-trim{% endif %}" style="font-size: 9px; margin-right: 4px;">{{ trade.type }}</span>
+            <strong style="color: #f1f5f9;">{{ trade.symbol }}</strong>
+            <span style="color: #94a3b8; margin-left: 6px;">{{ trade.insider }}</span>
+        </div>
+        <div style="text-align: right; white-space: nowrap;">
+            <span style="color: #cbd5e1;">{{ trade.value }}</span>
+            <span style="color: #4b5563; margin-left: 6px;">{{ trade.date }}</span>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
 </div>
 {% endif %}
 

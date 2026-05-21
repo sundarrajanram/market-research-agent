@@ -69,11 +69,12 @@ def get_earnings_alerts(portfolio_symbols, lookahead_days=5):
 # ---------------------------------------------------------------------------
 
 def get_insider_activity(portfolio_symbols, max_per_stock=5):
-    """Scrape OpenInsider for recent insider buys/sells for portfolio stocks."""
-    results = {}
+    """Scrape OpenInsider for recent insider buys/sells, return flat list sorted by date."""
+    all_trades = []
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
     }
+    today = datetime.now().date()
 
     for symbol in portfolio_symbols:
         try:
@@ -87,26 +88,45 @@ def get_insider_activity(portfolio_symbols, max_per_stock=5):
             if not table:
                 continue
 
-            rows = table.find_all("tr")[1:]  # skip header
-            trades = []
+            rows = table.find_all("tr")[1:]
             for row in rows[:max_per_stock]:
                 cells = row.find_all("td")
                 if len(cells) < 12:
                     continue
 
-                filing_date = cells[1].get_text(strip=True)
                 trade_date = cells[2].get_text(strip=True)
                 insider_name = cells[4].get_text(strip=True)
                 title = cells[5].get_text(strip=True)
-                trade_type = cells[6].get_text(strip=True)  # P-Purchase, S-Sale
+                trade_type = cells[6].get_text(strip=True)
                 price = cells[8].get_text(strip=True)
                 qty = cells[9].get_text(strip=True)
                 value = cells[11].get_text(strip=True)
 
-                # Classify as buy or sell
                 is_buy = "P" in trade_type.upper() or "Purchase" in trade_type
-                trades.append({
+
+                # Parse date for sorting and grouping
+                try:
+                    parsed_date = datetime.strptime(trade_date, "%Y-%m-%d").date()
+                except (ValueError, TypeError):
+                    parsed_date = None
+
+                # Determine time group
+                time_group = "older"
+                if parsed_date:
+                    days_ago = (today - parsed_date).days
+                    if days_ago <= 7:
+                        time_group = "this_week"
+                    elif days_ago <= 14:
+                        time_group = "last_week"
+                    elif days_ago <= 30:
+                        time_group = "this_month"
+
+                all_trades.append({
+                    "symbol": symbol,
                     "date": trade_date,
+                    "parsed_date": parsed_date,
+                    "days_ago": (today - parsed_date).days if parsed_date else 999,
+                    "time_group": time_group,
                     "insider": insider_name,
                     "title": title,
                     "type": "BUY" if is_buy else "SELL",
@@ -115,13 +135,21 @@ def get_insider_activity(portfolio_symbols, max_per_stock=5):
                     "value": value,
                 })
 
-            if trades:
-                results[symbol] = trades
-
         except Exception as e:
             print(f"  Insider data failed for {symbol}: {e}")
 
-    return results
+    # Sort by most recent first
+    all_trades.sort(key=lambda x: x["days_ago"])
+
+    # Group by time period
+    grouped = {
+        "this_week": [t for t in all_trades if t["time_group"] == "this_week"],
+        "last_week": [t for t in all_trades if t["time_group"] == "last_week"],
+        "this_month": [t for t in all_trades if t["time_group"] == "this_month"],
+        "older": [t for t in all_trades if t["time_group"] == "older"],
+    }
+
+    return {"trades": all_trades, "grouped": grouped}
 
 
 # ---------------------------------------------------------------------------
