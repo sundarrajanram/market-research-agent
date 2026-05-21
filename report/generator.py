@@ -175,10 +175,18 @@ REPORT_TEMPLATE = """
 <body>
 <div class="container">
 
-<div class="header">
-    <h1>Market Intelligence Briefing</h1>
-    <div class="subtitle">AI-Powered Daily Analysis</div>
-    <div class="date">{{ date }} &bull; Pre-Market &bull; {{ generated_at }} PST</div>
+<div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1>Market Intelligence Briefing</h1>
+        <div class="subtitle">AI-Powered Daily Analysis</div>
+        <div class="date">{{ date }} &bull; Pre-Market &bull; {{ generated_at }} PST</div>
+    </div>
+    {% if portfolio_sparkline %}
+    <div style="text-align: right;">
+        <div style="font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Portfolio 30d</div>
+        {{ portfolio_sparkline }}
+    </div>
+    {% endif %}
 </div>
 
 {% if ai_summary %}
@@ -530,6 +538,7 @@ def generate_report(data):
         generated_at=datetime.now().strftime("%I:%M %p"),
         ai_summary=ai_raw,
         ai_summary_html=ai_html,
+        portfolio_sparkline=data.get("portfolio_sparkline", ""),
         fear_greed=data.get("fear_greed"),
         indices=data.get("indices", {}),
         sectors=data.get("sectors", {}),

@@ -173,7 +173,16 @@ def run_research():
     except Exception as e:
         print(f"    Signal history failed (non-fatal): {e}")
 
-    # 10. AI synthesis
+    # 10. Portfolio sparkline
+    print("  Generating portfolio sparkline...")
+    portfolio_sparkline = ""
+    try:
+        from report.sparkline import generate_portfolio_sparkline
+        portfolio_sparkline = generate_portfolio_sparkline()
+    except Exception as e:
+        print(f"    Sparkline generation failed (non-fatal): {e}")
+
+    # 11. AI synthesis
     print("  Generating AI market narrative...")
     report_data = {
         "indices": indices,
@@ -191,15 +200,16 @@ def run_research():
         "price_alerts": price_alerts,
         "position_sizing": position_sizing,
         "signal_accuracy": signal_accuracy,
+        "portfolio_sparkline": portfolio_sparkline,
     }
     ai_summary = generate_ai_summary(report_data)
     report_data["ai_summary"] = ai_summary
 
-    # 11. Generate report
+    # 12. Generate report
     print("  Generating report...")
     html_report = generate_report(report_data)
 
-    # 12. Send or save report
+    # 13. Send or save report
     print("  Sending report...")
     send_report(html_report)
 
