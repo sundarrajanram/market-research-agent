@@ -84,9 +84,10 @@ def run_eod_flash():
 
 
 def generate_eod_html(holdings, total_day_gain, total_value, indices):
-    """Generate the EOD flash HTML email."""
+    """Generate the EOD flash HTML email — percentages only, no dollar values or share counts."""
     total_pct = (total_day_gain / (total_value - total_day_gain)) * 100 if total_value > total_day_gain else 0
-    trend_color = "#34d399" if total_day_gain >= 0 else "#f87171"
+    trend_color = "#34d399" if total_pct >= 0 else "#f87171"
+    total_sign = "+" if total_pct >= 0 else ""
 
     # Winners and losers
     winners = [h for h in holdings if h["change_pct"] > 0]
@@ -99,22 +100,17 @@ def generate_eod_html(holdings, total_day_gain, total_value, indices):
         color = "#34d399" if change >= 0 else "#f87171"
         index_html += f'<span style="margin-right: 16px;"><span style="color: #94a3b8;">{name}</span> <span style="color: {color}; font-weight: 600;">{"+" if change >= 0 else ""}{change}%</span></span>'
 
-    # Holdings rows
+    # Holdings rows — only ticker, price, and % change
     rows_html = ""
     for h in holdings:
         color = "#34d399" if h["change_pct"] >= 0 else "#f87171"
-        gain_sign = "+" if h["day_gain"] >= 0 else ""
         rows_html += f"""<tr>
             <td style="padding: 8px 10px; border-bottom: 1px solid #1f2937;">
                 <strong style="color: #f1f5f9;">{h['symbol']}</strong>
-                <span style="color: #64748b; font-size: 11px; margin-left: 6px;">{h['shares']} shares</span>
             </td>
             <td style="padding: 8px 10px; border-bottom: 1px solid #1f2937; text-align: right; color: #cbd5e1;">${h['price']}</td>
             <td style="padding: 8px 10px; border-bottom: 1px solid #1f2937; text-align: right; color: {color}; font-weight: 600;">{"+" if h['change_pct'] >= 0 else ""}{h['change_pct']}%</td>
-            <td style="padding: 8px 10px; border-bottom: 1px solid #1f2937; text-align: right; color: {color};">{gain_sign}${abs(h['day_gain']):,.0f}</td>
         </tr>"""
-
-    total_sign = "+" if total_day_gain >= 0 else ""
 
     html = f"""<!DOCTYPE html>
 <html>
@@ -133,14 +129,14 @@ def generate_eod_html(holdings, total_day_gain, total_value, indices):
             <div style="font-size: 12px; color: #64748b; margin-top: 4px;">{datetime.now().strftime('%B %d, %Y')} &bull; Market Close</div>
         </div>
         <div style="text-align: right;">
-            <div style="font-size: 24px; font-weight: 700; color: {trend_color};">{total_sign}${abs(total_day_gain):,.0f}</div>
-            <div style="font-size: 13px; color: {trend_color};">{total_sign}{total_pct:.2f}% today</div>
+            <div style="font-size: 28px; font-weight: 700; color: {trend_color};">{total_sign}{total_pct:.2f}%</div>
+            <div style="font-size: 12px; color: #64748b;">portfolio today</div>
         </div>
     </div>
 </div>
 
 <div style="background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
-    <div style="font-size: 12px; margin-bottom: 4px;">{index_html}</div>
+    <div style="font-size: 12px;">{index_html}</div>
 </div>
 
 <div style="background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
@@ -149,19 +145,13 @@ def generate_eod_html(holdings, total_day_gain, total_value, indices):
             <th style="text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; padding: 8px 10px; border-bottom: 1px solid #1f2937;">Stock</th>
             <th style="text-align: right; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; padding: 8px 10px; border-bottom: 1px solid #1f2937;">Price</th>
             <th style="text-align: right; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; padding: 8px 10px; border-bottom: 1px solid #1f2937;">Change</th>
-            <th style="text-align: right; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; padding: 8px 10px; border-bottom: 1px solid #1f2937;">P&L</th>
         </tr>
         {rows_html}
-        <tr style="border-top: 2px solid #374151;">
-            <td style="padding: 10px; font-weight: 700; color: #f1f5f9;" colspan="2">Total Portfolio</td>
-            <td style="padding: 10px; text-align: right; color: {trend_color}; font-weight: 700;">{total_sign}{total_pct:.2f}%</td>
-            <td style="padding: 10px; text-align: right; color: {trend_color}; font-weight: 700;">{total_sign}${abs(total_day_gain):,.0f}</td>
-        </tr>
     </table>
 </div>
 
 <div style="background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
-    <div style="display: flex; gap: 20px;">
+    <div style="display: flex; gap: 24px;">
         <div>
             <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Winners</div>
             <div style="font-size: 20px; font-weight: 700; color: #34d399;">{len(winners)}</div>
@@ -173,10 +163,6 @@ def generate_eod_html(holdings, total_day_gain, total_value, indices):
         <div>
             <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Flat</div>
             <div style="font-size: 20px; font-weight: 700; color: #94a3b8;">{len(flat)}</div>
-        </div>
-        <div>
-            <div style="font-size: 10px; color: #64748b; text-transform: uppercase;">Portfolio Value</div>
-            <div style="font-size: 20px; font-weight: 700; color: #e2e8f0;">${total_value:,.0f}</div>
         </div>
     </div>
 </div>
