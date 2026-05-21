@@ -2,8 +2,8 @@ name: Daily Market Research Report
 
 on:
   schedule:
-    # 4:30 AM PST = 11:30 UTC (during PDT) — arrives ~5 AM with GH delay
-    - cron: '30 11 * * 1-5'
+    # 2:00 AM PST = 9:00 UTC (during PDT)
+    - cron: '0 9 * * 1-5'
     # 6:30 AM PST = 13:30 UTC (during PDT) — arrives ~7 AM with GH delay
     - cron: '30 13 * * 1-5'
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
   full-report:
     runs-on: ubuntu-latest
     if: >-
-      (github.event.schedule == '30 11 * * 1-5') ||
+      (github.event.schedule == '0 9 * * 1-5') ||
       (github.event_name == 'workflow_dispatch' && (github.event.inputs.report_type == 'full' || github.event.inputs.report_type == 'both'))
     steps:
       - name: Checkout code

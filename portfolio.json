@@ -1,15 +1,17 @@
 {
     "name": "My Robinhood Portfolio",
-    "last_updated": "2026-05-19",
+    "last_updated": "2026-05-21",
     "holdings": [
         {"symbol": "VEEV", "shares": 75},
-        {"symbol": "MOG-A", "shares": 60},
+        {"symbol": "MOG-A", "shares": 1600},
         {"symbol": "MGNI", "shares": 1300},
-        {"symbol": "NOW", "shares": 120},
-        {"symbol": "VST", "shares": 180},
+        {"symbol": "NOW", "shares": 200},
+        {"symbol": "VST", "shares": 150},
         {"symbol": "MSFT", "shares": 30},
         {"symbol": "TSLA", "shares": 30},
         {"symbol": "RKLB", "shares": 100},
-        {"symbol": "EMBJ", "shares": 300}
+        {"symbol": "EMBJ", "shares": 330},
+        {"symbol": "GLW", "shares": 3},
+        {"symbol": "INTU", "shares": 1}
     ]
 }
