@@ -3,8 +3,8 @@
     "last_updated": "2026-05-21",
     "holdings": [
         {"symbol": "VEEV", "shares": 75},
-        {"symbol": "MOG-A", "shares": 1600},
-        {"symbol": "MGNI", "shares": 1300},
+        {"symbol": "MOG-A", "shares": 60},
+        {"symbol": "MGNI", "shares": 1600},
         {"symbol": "NOW", "shares": 200},
         {"symbol": "VST", "shares": 150},
         {"symbol": "MSFT", "shares": 30},
