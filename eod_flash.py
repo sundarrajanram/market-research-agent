@@ -61,8 +61,8 @@ def run_eod_flash():
     for h in holdings_data:
         h["allocation_pct"] = round((h["position_value"] / total_value) * 100, 1) if total_value > 0 else 0
 
-    # Sort by absolute gain (biggest movers first)
-    holdings_data.sort(key=lambda x: abs(x["day_gain"]), reverse=True)
+    # Sort by position value (largest allocation first)
+    holdings_data.sort(key=lambda x: x["position_value"], reverse=True)
 
     # Get index performance
     print("  Fetching index data...")
