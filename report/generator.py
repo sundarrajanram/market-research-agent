@@ -175,16 +175,16 @@ REPORT_TEMPLATE = """
 <body>
 <div class="container">
 
-<div class="header" style="display: flex; justify-content: space-between; align-items: center;">
-    <div>
-        <h1>Market Intelligence Briefing</h1>
-        <div class="subtitle">AI-Powered Daily Analysis</div>
-        <div class="date">{{ date }} &bull; Pre-Market &bull; {{ generated_at }} PST</div>
-    </div>
+<div class="header">
+    <h1>Market Intelligence Briefing</h1>
+    <div class="subtitle">AI-Powered Daily Analysis</div>
+    <div class="date">{{ date }} &bull; Pre-Market &bull; {{ generated_at }} PST</div>
     {% if portfolio_sparkline %}
-    <div style="text-align: right;">
-        <div style="font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Portfolio 30d</div>
-        {{ portfolio_sparkline }}
+    <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #1e3a5f;">
+        <div style="font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">30-Day Trends</div>
+        <div style="display: flex; flex-wrap: wrap;">
+            {{ portfolio_sparkline }}
+        </div>
     </div>
     {% endif %}
 </div>
