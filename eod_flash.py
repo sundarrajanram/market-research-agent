@@ -57,6 +57,10 @@ def run_eod_flash():
         except Exception as e:
             print(f"    Error fetching {symbol}: {e}")
 
+    # Calculate portfolio allocation %
+    for h in holdings_data:
+        h["allocation_pct"] = round((h["position_value"] / total_value) * 100, 1) if total_value > 0 else 0
+
     # Sort by absolute gain (biggest movers first)
     holdings_data.sort(key=lambda x: abs(x["day_gain"]), reverse=True)
 
@@ -100,13 +104,14 @@ def generate_eod_html(holdings, total_day_gain, total_value, indices):
         color = "#34d399" if change >= 0 else "#f87171"
         index_html += f'<span style="margin-right: 16px;"><span style="color: #94a3b8;">{name}</span> <span style="color: {color}; font-weight: 600;">{"+" if change >= 0 else ""}{change}%</span></span>'
 
-    # Holdings rows — only ticker, price, and % change
+    # Holdings rows — ticker with allocation %, price, and % change
     rows_html = ""
     for h in holdings:
         color = "#34d399" if h["change_pct"] >= 0 else "#f87171"
         rows_html += f"""<tr>
             <td style="padding: 8px 10px; border-bottom: 1px solid #1f2937;">
                 <strong style="color: #f1f5f9;">{h['symbol']}</strong>
+                <span style="color: #64748b; font-size: 11px; margin-left: 4px;">({h['allocation_pct']}%)</span>
             </td>
             <td style="padding: 8px 10px; border-bottom: 1px solid #1f2937; text-align: right; color: #cbd5e1;">${h['price']}</td>
             <td style="padding: 8px 10px; border-bottom: 1px solid #1f2937; text-align: right; color: {color}; font-weight: 600;">{"+" if h['change_pct'] >= 0 else ""}{h['change_pct']}%</td>
