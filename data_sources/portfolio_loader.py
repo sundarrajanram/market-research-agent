@@ -1,21 +1,20 @@
-"""Load portfolio from local JSON file or GitHub repo."""
+"""Load portfolio — tries Snaptrade (live Robinhood) first, falls back to local JSON."""
 import json
 import os
-import requests
 
 
 def load_portfolio(filepath=None):
-    """Load portfolio holdings. Tries GitHub raw file first, then local."""
-    # Try loading from GitHub (so you can edit from phone/browser)
-    github_url = os.getenv("PORTFOLIO_URL")
-    if github_url:
+    """Load portfolio holdings. Tries Snaptrade first, then local file."""
+    # Try Snaptrade (live Robinhood data)
+    if os.getenv("SNAPTRADE_CLIENT_ID"):
         try:
-            resp = requests.get(github_url, timeout=10)
-            if resp.status_code == 200:
-                data = resp.json()
-                return data.get("holdings", [])
+            from data_sources.snaptrade_loader import load_portfolio_from_snaptrade
+            holdings = load_portfolio_from_snaptrade()
+            if holdings:
+                print(f"    Loaded {len(holdings)} holdings from Robinhood (via Snaptrade)")
+                return holdings
         except Exception as e:
-            print(f"  Could not fetch portfolio from GitHub: {e}")
+            print(f"    Snaptrade failed, falling back to local file: {e}")
 
     # Fall back to local file
     if filepath is None:
@@ -24,10 +23,12 @@ def load_portfolio(filepath=None):
     try:
         with open(filepath, "r") as f:
             data = json.load(f)
-        return data.get("holdings", [])
+        holdings = data.get("holdings", [])
+        print(f"    Loaded {len(holdings)} holdings from portfolio.json (fallback)")
+        return holdings
     except FileNotFoundError:
-        print("  portfolio.json not found — no portfolio loaded")
+        print("    portfolio.json not found — no portfolio loaded")
         return []
     except json.JSONDecodeError as e:
-        print(f"  Error reading portfolio.json: {e}")
+        print(f"    Error reading portfolio.json: {e}")
         return []

@@ -13,3 +13,4 @@ robin_stocks>=3.0.0
 pyotp>=2.9.0
 google-generativeai>=0.8.0
 groq>=1.0.0
+snaptrade-python-sdk>=11.0.0

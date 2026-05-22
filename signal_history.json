@@ -107,6 +107,51 @@
       "rating": "HOLD",
       "checked": false,
       "outcome": null
+    },
+    {
+      "date": "2026-05-22",
+      "symbol": "INTU",
+      "price_at_signal": 319.86,
+      "score": 45,
+      "rating": "STRONG BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-22",
+      "symbol": "VST",
+      "price_at_signal": 156.55,
+      "score": 30,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-22",
+      "symbol": "JPM",
+      "price_at_signal": 306.38,
+      "score": 25,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-22",
+      "symbol": "CRM",
+      "price_at_signal": 180.82,
+      "score": 25,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
+    },
+    {
+      "date": "2026-05-22",
+      "symbol": "V",
+      "price_at_signal": 329.46,
+      "score": 20,
+      "rating": "BUY",
+      "checked": false,
+      "outcome": null
     }
   ],
   "accuracy_stats": {}
