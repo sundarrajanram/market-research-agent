@@ -105,6 +105,16 @@ def run_research():
     # Top opportunities NOT in portfolio
     opportunities = [s for s in scored_stocks if s["symbol"] not in portfolio_symbols][:8]
 
+    # Calculate portfolio allocation %
+    portfolio_holdings_map = {h["symbol"]: h.get("shares", 0) for h in my_portfolio}
+    portfolio_values = {}
+    total_portfolio_value = 0
+    for stock in portfolio_scored:
+        shares = portfolio_holdings_map.get(stock["symbol"], 0)
+        position_value = stock["price"] * shares
+        portfolio_values[stock["symbol"]] = position_value
+        total_portfolio_value += position_value
+
     # Portfolio action items
     portfolio_actions = []
     for stock in portfolio_scored:
@@ -124,10 +134,13 @@ def run_research():
             action = "EXIT"
             action_detail = "Negative signals — consider selling"
 
+        allocation_pct = round((portfolio_values.get(stock["symbol"], 0) / total_portfolio_value) * 100, 1) if total_portfolio_value > 0 else 0
+
         portfolio_actions.append({
             **stock,
             "action": action,
             "action_detail": action_detail,
+            "allocation_pct": allocation_pct,
         })
 
     # 8. News and sentiment

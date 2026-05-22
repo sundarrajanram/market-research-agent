@@ -128,7 +128,7 @@ REPORT_TEMPLATE = """
     .negative { color: #f87171; }
 
     .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .badge-add { background: #064e3b; color: #6ee7b7; }
+    .badge-add, .badge-add-more { background: #064e3b; color: #6ee7b7; }
     .badge-hold { background: #1e3a5f; color: #93c5fd; }
     .badge-watch { background: #3b3510; color: #fde68a; }
     .badge-trim { background: #4c1d1d; color: #fca5a5; }
@@ -143,14 +143,14 @@ REPORT_TEMPLATE = """
     .stock-row:last-child { border-bottom: none; }
     .stock-info { flex: 1; }
     .stock-symbol { font-weight: 700; font-size: 14px; color: #f1f5f9; }
-    .stock-name { font-size: 11px; color: #64748b; }
-    .stock-price { font-size: 14px; font-weight: 600; text-align: right; }
+    .stock-name { font-size: 11px; color: #94a3b8; }
+    .stock-price { font-size: 14px; font-weight: 600; text-align: right; color: #e2e8f0; }
     .stock-signals { margin-top: 4px; }
-    .signal-tag { display: inline-block; font-size: 10px; background: #1f2937; color: #94a3b8; padding: 2px 6px; border-radius: 3px; margin: 2px 2px 0 0; }
+    .signal-tag { display: inline-block; font-size: 10px; background: #1e293b; color: #cbd5e1; padding: 2px 6px; border-radius: 3px; margin: 2px 2px 0 0; }
 
     .action-row { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #1f2937; gap: 12px; }
     .action-row:last-child { border-bottom: none; }
-    .action-detail { font-size: 11px; color: #64748b; margin-top: 2px; }
+    .action-detail { font-size: 11px; color: #94a3b8; margin-top: 2px; }
 
     .sector-bar { display: flex; align-items: center; padding: 6px 0; }
     .sector-name { width: 140px; font-size: 12px; color: #94a3b8; }
@@ -162,12 +162,12 @@ REPORT_TEMPLATE = """
     .news-item:last-child { border-bottom: none; }
     .news-item a { color: #93c5fd; text-decoration: none; font-size: 13px; }
     .news-item a:hover { color: #bfdbfe; }
-    .news-source { font-size: 10px; color: #4b5563; margin-left: 8px; }
+    .news-source { font-size: 10px; color: #94a3b8; margin-left: 8px; }
 
     .trending-tag { display: inline-block; background: #1f2937; border: 1px solid #374151; color: #d1d5db; padding: 4px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; margin: 3px; }
 
-    .footer { text-align: center; padding: 20px; font-size: 11px; color: #4b5563; }
-    .footer a { color: #64748b; }
+    .footer { text-align: center; padding: 20px; font-size: 11px; color: #94a3b8; }
+    .footer a { color: #94a3b8; }
 
     .divider { height: 1px; background: linear-gradient(90deg, transparent, #1f2937, transparent); margin: 4px 0; }
 </style>
@@ -209,6 +209,9 @@ REPORT_TEMPLATE = """
             <a href="https://www.tradingview.com/symbols/{{ stock.symbol|replace('-', '.') }}/" style="text-decoration:none;">
                 <span class="stock-symbol">{{ stock.symbol }}</span>
             </a>
+            {% if stock.allocation_pct %}
+            <span style="font-size: 11px; color: #a78bfa; margin-left: 6px; font-weight: 600;">({{ stock.allocation_pct }}%)</span>
+            {% endif %}
             <span class="stock-name">{{ stock.name }}</span>
             <div class="action-detail">{{ stock.action_detail }}</div>
             <div style="margin-top: 4px;">
@@ -224,11 +227,11 @@ REPORT_TEMPLATE = """
             </div>
         </div>
         <div class="stock-price">
-            <div>${{ stock.price }}</div>
-            <div class="{{ 'positive' if stock.change_pct >= 0 else 'negative' }}" style="font-size:12px;">
+            <div style="color: #f1f5f9;">${{ stock.price }}</div>
+            <div class="{{ 'positive' if stock.change_pct >= 0 else 'negative' }}" style="font-size:12px; font-weight: 600;">
                 {{ "+" if stock.change_pct >= 0 }}{{ stock.change_pct }}%
             </div>
-            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Score: {{ stock.total_score }}</div>
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Score: {{ stock.total_score }}</div>
         </div>
     </div>
     {% endfor %}
