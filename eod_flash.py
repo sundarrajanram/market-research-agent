@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from datetime import datetime
 import yfinance as yf
 from data_sources.portfolio_loader import load_portfolio
+from data_sources.heatmap import generate_heatmap_html
 from email_sender import send_eod_report
 import config
 
@@ -104,6 +105,9 @@ def generate_eod_html(holdings, total_day_gain, total_value, indices):
         color = "#34d399" if change >= 0 else "#f87171"
         index_html += f'<span style="margin-right: 16px;"><span style="color: #94a3b8;">{name}</span> <span style="color: {color}; font-weight: 600;">{"+" if change >= 0 else ""}{change}%</span></span>'
 
+    # Heatmap
+    heatmap_html = generate_heatmap_html(holdings)
+
     # Holdings rows — ticker with allocation %, price, and % change
     rows_html = ""
     for h in holdings:
@@ -143,6 +147,8 @@ def generate_eod_html(holdings, total_day_gain, total_value, indices):
 <div style="background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
     <div style="font-size: 12px;">{index_html}</div>
 </div>
+
+{heatmap_html}
 
 <div style="background: #111827; border: 1px solid #1f2937; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">

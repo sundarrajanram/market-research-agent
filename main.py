@@ -94,6 +94,7 @@ def run_research():
             "rating": rating,
             "signals": all_signals,
             "sector": data.get("sector", "Unknown"),
+            "pe_ratio": data.get("pe_ratio"),
         })
 
     scored_stocks.sort(key=lambda x: x["total_score"], reverse=True)
@@ -186,14 +187,14 @@ def run_research():
     except Exception as e:
         print(f"    Signal history failed (non-fatal): {e}")
 
-    # 10. Portfolio sparkline
-    print("  Generating portfolio sparkline...")
-    portfolio_sparkline = ""
+    # 10. Portfolio heatmap
+    print("  Generating portfolio heatmap...")
+    portfolio_heatmap = ""
     try:
-        from report.sparkline import generate_portfolio_sparkline
-        portfolio_sparkline = generate_portfolio_sparkline()
+        from data_sources.heatmap import generate_heatmap_html
+        portfolio_heatmap = generate_heatmap_html(portfolio_actions)
     except Exception as e:
-        print(f"    Sparkline generation failed (non-fatal): {e}")
+        print(f"    Heatmap generation failed (non-fatal): {e}")
 
     # 11. AI synthesis
     print("  Generating AI market narrative...")
@@ -213,7 +214,7 @@ def run_research():
         "price_alerts": price_alerts,
         "position_sizing": position_sizing,
         "signal_accuracy": signal_accuracy,
-        "portfolio_sparkline": portfolio_sparkline,
+        "portfolio_heatmap": portfolio_heatmap,
     }
     ai_summary = generate_ai_summary(report_data)
     report_data["ai_summary"] = ai_summary

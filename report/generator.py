@@ -179,12 +179,9 @@ REPORT_TEMPLATE = """
     <h1>Market Intelligence Briefing</h1>
     <div class="subtitle">AI-Powered Daily Analysis</div>
     <div class="date">{{ date }} &bull; Pre-Market &bull; {{ generated_at }} PST</div>
-    {% if portfolio_sparkline %}
+    {% if portfolio_heatmap %}
     <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #1e3a5f;">
-        <div style="font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">30-Day Trends</div>
-        <div style="display: flex; flex-wrap: wrap;">
-            {{ portfolio_sparkline }}
-        </div>
+        {{ portfolio_heatmap }}
     </div>
     {% endif %}
 </div>
@@ -226,12 +223,15 @@ REPORT_TEMPLATE = """
                 <a href="https://finviz.com/quote.ashx?t={{ stock.symbol }}" style="color: #60a5fa; text-decoration: none;">Analysis</a>
             </div>
         </div>
-        <div class="stock-price">
-            <div style="color: #f1f5f9;">${{ stock.price }}</div>
-            <div class="{{ 'positive' if stock.change_pct >= 0 else 'negative' }}" style="font-size:12px; font-weight: 600;">
+        <div class="stock-price" style="min-width: 80px;">
+            <div style="color: #f1f5f9; font-size: 14px; font-weight: 600;">${{ stock.price }}</div>
+            <div class="{{ 'positive' if stock.change_pct >= 0 else 'negative' }}" style="font-size: 12px; font-weight: 600;">
                 {{ "+" if stock.change_pct >= 0 }}{{ stock.change_pct }}%
             </div>
             <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Score: {{ stock.total_score }}</div>
+            {% if stock.pe_ratio %}
+            <div style="font-size: 11px; color: #94a3b8;">P/E: {{ "%.1f"|format(stock.pe_ratio) }}</div>
+            {% endif %}
         </div>
     </div>
     {% endfor %}
@@ -541,7 +541,7 @@ def generate_report(data):
         generated_at=datetime.now().strftime("%I:%M %p"),
         ai_summary=ai_raw,
         ai_summary_html=ai_html,
-        portfolio_sparkline=data.get("portfolio_sparkline", ""),
+        portfolio_heatmap=data.get("portfolio_heatmap", ""),
         fear_greed=data.get("fear_greed"),
         indices=data.get("indices", {}),
         sectors=data.get("sectors", {}),

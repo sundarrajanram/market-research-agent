@@ -9,6 +9,7 @@ import yfinance as yf
 from jinja2 import Template
 
 from data_sources.portfolio_loader import load_portfolio
+from data_sources.heatmap import generate_heatmap_html
 from email_sender import send_market_open_report
 import config
 
@@ -194,6 +195,10 @@ MARKET_OPEN_TEMPLATE = """
 </div>
 {% endif %}
 
+{% if heatmap_html %}
+{{ heatmap_html|safe }}
+{% endif %}
+
 {% if movers %}
 <div class="card">
     <h2>Your Portfolio - Pre-Market Movers</h2>
@@ -258,6 +263,22 @@ def generate_market_open_report():
     # Generate action items
     action_items = generate_action_items(movers)
 
+    # Build heatmap data using portfolio shares and pre-market prices
+    shares_map = {h["symbol"]: h.get("shares", 0) for h in portfolio}
+    heatmap_positions = []
+    for m in movers:
+        shares = shares_map.get(m["symbol"], 0)
+        position_value = m["price"] * shares if shares else 0
+        heatmap_positions.append({
+            "symbol": m["symbol"],
+            "position_value": position_value,
+            "change_pct": m["change_pct"],
+        })
+    total_value = sum(p["position_value"] for p in heatmap_positions)
+    for p in heatmap_positions:
+        p["allocation_pct"] = round((p["position_value"] / total_value) * 100, 1) if total_value > 0 else 0
+    heatmap_html = generate_heatmap_html(heatmap_positions)
+
     # Render HTML
     print("  Generating report...")
     template = Template(MARKET_OPEN_TEMPLATE)
@@ -267,6 +288,7 @@ def generate_market_open_report():
         trend=trend,
         movers=movers,
         action_items=action_items,
+        heatmap_html=heatmap_html,
     )
 
     # Send
